@@ -54,5 +54,6 @@ export default function DashboardLayout({
       </aside>
       <main className="flex-1 p-6 bg-white">{children}</main>
     </div>
+    
   );
 }

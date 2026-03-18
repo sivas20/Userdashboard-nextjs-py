@@ -30,7 +30,7 @@ export default function Dashboard() {
             <p className="text-zinc-600">Capture your precious moments...</p>
           </div>
         </Link>
-        <Link href="/dashboard/notes">
+        <Link href="/dashboard/secret">
           <div className="p-6 bg-zinc-100 hover:bg-zinc-300 rounded-lg shadow">
             <h2 className="text-xl font-semibold text-black mb-2">Message Storage</h2>
             <p className="text-zinc-600">Keep your private thoughts safe here...</p>
