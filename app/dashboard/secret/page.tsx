@@ -44,7 +44,7 @@ export default function Secret() {
           </p>
           </div>
           <Link href="/dashboard/secret/none">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+            <button className="bg-gray-600 hover:bg-blue-900 text-white px-4 py-2 rounded-md">
               + New Message
             </button>
           </Link>

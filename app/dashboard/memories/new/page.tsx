@@ -3,6 +3,7 @@ import { useState } from "react";
 
 export default function Memorysection() {
   const [place, setPlace] = useState("");
+  const [date, setDate] = useState("");
   const [text, setText] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -36,6 +37,7 @@ export default function Memorysection() {
 
     const newEntry = {
       place,
+      date,
       text,
       images,
     };
@@ -43,6 +45,7 @@ export default function Memorysection() {
     console.log(newEntry);
 
     setPlace("");
+    setDate("");
     setText("");
     setImages([]);
   };
@@ -57,6 +60,12 @@ export default function Memorysection() {
           placeholder="Enter place..."
           value={place}
           onChange={(e) => setPlace(e.target.value)}
+          className="w-full text-black p-3 mb-4 border rounded-md"
+        />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
           className="w-full text-black p-3 mb-4 border rounded-md"
         />
         <textarea

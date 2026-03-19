@@ -8,7 +8,7 @@ export default function Profile() {
               My Profile
             </h1>
             <p className="text-zinc-500 mt-1">
-              Manage your personal information
+              your personal information.
             </p>
           </div>
           <div>
