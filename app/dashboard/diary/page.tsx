@@ -7,8 +7,17 @@ export default function Diary() {
   const [entries, setEntries] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchedData: any[] = [];
-    setEntries(fetchedData);
+    const fetchEntries = async () => {
+      try {
+        const res = await fetch("/api/diaries");
+        const data = await res.json();
+        setEntries(data.entries || []);
+      } catch (err) {
+        console.error("Error fetching diary entries:", err);
+      }
+    };
+
+    fetchEntries();
   }, []);
 
   return (

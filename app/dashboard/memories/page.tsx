@@ -3,17 +3,28 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Eye } from "lucide-react";
 
+type Memory = {
+  id: number;
+  place: string;
+  date: string;
+};
+
 export default function Memories() {
-  const [memories, setMemories] = useState<any[]>([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
 
   useEffect(() => {
-    const fetchedData: any[] = [];
-    setMemories(fetchedData);
+    fetch("http://localhost:5000/memories", {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => setMemories(data))
+      .catch((err) => console.log(err));
   }, []);
 
   return (
     <div className="min-h-screen bg-zinc-100 py-10 px-4">
       <main className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-md">
+
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-semibold text-black">
@@ -40,9 +51,9 @@ export default function Memories() {
             <h2 className="text-xl font-semibold mb-4">Your Memories</h2>
 
             <ul className="space-y-3">
-              {memories.map((memory, index) => (
+              {memories.map((memory) => (
                 <li
-                  key={index}
+                  key={memory.id}
                   className="flex justify-between items-center p-4 bg-zinc-100 rounded-md shadow-sm hover:bg-zinc-200 transition"
                 >
                   <div>
@@ -50,11 +61,13 @@ export default function Memories() {
                       {memory.place || "Untitled Memory"}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {memory.date || "No date"}
+                      {memory.date
+                        ? new Date(memory.date).toLocaleDateString()
+                        : "No date"}
                     </p>
                   </div>
 
-                  <Link href={`/dashboard/memories/${memory.id || index}`}>
+                  <Link href={`/dashboard/memories/${memory.id}`}>
                     <button className="flex items-center gap-2 text-blue-600 hover:scale-105 transition">
                       <Eye size={18} />
                       View
@@ -65,6 +78,7 @@ export default function Memories() {
             </ul>
           </div>
         )}
+
       </main>
     </div>
   );

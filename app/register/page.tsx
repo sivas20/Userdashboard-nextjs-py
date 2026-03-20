@@ -2,15 +2,15 @@ import { Italic } from "lucide-react";
 
 export default function Register() {
   return (
-    <div className="min-h-screen bg-zinc-100 py-10 px-4">
+    <div className="min-h-screen bg-zinc-100 py-20 px-4">
       <main className="max-w-md mx-auto bg-white rounded-xl shadow-md p-8">
         <h1 className="text-3xl text-center font-semibold text-black mb-6">
           Register
         </h1>
-        <form className="space-y-6">
+        <form action="/register" method="POST" className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-black mb-1">
-              User Name
+            <label className="block text-m font-medium text-black mb-1">
+              Username
             </label>
             <input
               type="text"

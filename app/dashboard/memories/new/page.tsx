@@ -14,7 +14,6 @@ export default function Memorysection() {
     setImages((prev) => [...prev, ...filesArray]);
   };
 
-  // Handle drag drop
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
@@ -31,49 +30,69 @@ export default function Memorysection() {
     setDragging(false);
   };
 
-  // Save
-  const handleSave = () => {
+  // ✅ Save to backend
+  const handleSave = async () => {
     if (!place || !text) return;
 
-    const newEntry = {
-      place,
-      date,
-      text,
-      images,
-    };
+    const formData = new FormData();
+    formData.append("place", place);
+    formData.append("date", date);
+    formData.append("text", text);
 
-    console.log(newEntry);
+    images.forEach((img) => {
+      formData.append("images", img);
+    });
 
-    setPlace("");
-    setDate("");
-    setText("");
-    setImages([]);
+    try {
+      const res = await fetch("http://localhost:5000/memories", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      console.log("Saved:", data);
+
+      // reset
+      setPlace("");
+      setDate("");
+      setText("");
+      setImages([]);
+
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
     <div className="min-h-screen bg-zinc-100 py-10 px-4">
       <div className="max-w-3xl mx-auto p-8 bg-white rounded-xl shadow-md">
+
         <h2 className="text-2xl text-black font-semibold mb-6 text-center">
           <i>Place your memories</i>
         </h2>
+
         <input
           placeholder="Enter place..."
           value={place}
           onChange={(e) => setPlace(e.target.value)}
           className="w-full text-black p-3 mb-4 border rounded-md"
         />
+
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           className="w-full text-black p-3 mb-4 border rounded-md"
         />
+
         <textarea
           placeholder="Write about your memories here..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="w-full text-black p-3 h-32 border rounded-md mb-4"
         />
+
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -104,6 +123,7 @@ export default function Memorysection() {
             Browse Files
           </label>
         </div>
+
         {images.length > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-6">
             {images.map((img, index) => (
@@ -141,6 +161,7 @@ export default function Memorysection() {
             Back
           </button>
         </div>
+
       </div>
     </div>
   );
