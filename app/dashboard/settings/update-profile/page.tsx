@@ -41,7 +41,7 @@ export default function UpdateProfile() {
   }, []);
 
   // Handle input change
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -49,12 +49,12 @@ export default function UpdateProfile() {
   };
 
   // Handle file
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: any) => {
     setFile(e.target.files[0]);
   };
 
   // Submit form
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     const data = new FormData();
