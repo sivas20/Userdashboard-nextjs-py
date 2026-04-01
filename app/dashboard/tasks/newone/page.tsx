@@ -1,29 +1,30 @@
 "use client";
+import { Router } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function NewTask() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const Router = useRouter();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    const response = await fetch("/api/tasks", {
+    const response = await fetch("http://localhost:5000/newtask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title, description, dueDate }),
+      credentials: "include",
+      body: JSON.stringify({ title, description, date: dueDate }),
     });
 
     const data = await response.json();
     console.log("Task created:", data);
 
-    // ✅ clear form after submit
-    setTitle("");
-    setDescription("");
-    setDueDate("");
+    Router.push("/dashboard/tasks");
   };
 
   return (

@@ -9,9 +9,7 @@ export default function Profile() {
       credentials: "include",
     })
       .then((res) => res.json())
-      .then((data) => {
-        setUser(data);
-      })
+      .then((data) => setUser(data))
       .catch((err) => console.log(err));
   }, []);
 
@@ -34,17 +32,17 @@ export default function Profile() {
           </div>
 
           <img
-            src={user.image || "/images/User.png"}
+            src={user.profile_picture || "/images/User.png"}
             alt="Profile"
             className="w-28 h-28 rounded-full object-cover border-4 border-zinc-200"
           />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
-          
+
           <div>
             <p className="text-sm text-zinc-500">Name</p>
-            <p className="font-medium px-3">{user.name}</p>
+            <p className="font-medium px-3">{user.full_name}</p>
           </div>
 
           <div>
@@ -62,11 +60,20 @@ export default function Profile() {
             <p className="font-medium px-3">{user.email}</p>
           </div>
 
-          <div className="md:col-span-2 mb-4">
+          <div className="md:col-span-2">
             <p className="text-sm text-zinc-500">About</p>
-            <p className="font-medium px-4">
-              {user.about}
-            </p>
+            <p className="font-medium px-4">{user.about}</p>
+          </div>
+
+          <div className="md:col-span-2 flex justify-end">
+            <button
+              onClick={() =>
+                (window.location.href = "/dashboard/settings/update-profile")
+              }
+              className="px-5 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-800"
+            >
+              Update Profile
+            </button>
           </div>
 
         </div>

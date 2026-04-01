@@ -48,7 +48,7 @@ export default function Memories() {
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Your Memories</h2>
+            <h2 className="text-xl text-black font-semibold mb-4">Your Memories</h2>
 
             <ul className="space-y-3">
               {memories.map((memory) => (

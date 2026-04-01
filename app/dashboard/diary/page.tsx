@@ -3,15 +3,40 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Eye } from "lucide-react";
 
+type Entry = {
+  id: number;
+  date: string;
+  description: string;
+  images: string[];
+};
+
 export default function Diary() {
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-GB", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   useEffect(() => {
     const fetchEntries = async () => {
       try {
-        const res = await fetch("/api/diaries");
+        const res = await fetch("http://localhost:5000/dairies", {
+          credentials: "include",
+        });
+
         const data = await res.json();
-        setEntries(data.entries || []);
+
+        if (Array.isArray(data)) {
+          setEntries(data);
+        } else {
+          setEntries([]);
+        }
+
       } catch (err) {
         console.error("Error fetching diary entries:", err);
       }
@@ -24,7 +49,6 @@ export default function Diary() {
     <div className="min-h-screen bg-zinc-100 py-10 px-4">
       <main className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-md">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-semibold text-black">
@@ -37,12 +61,11 @@ export default function Diary() {
 
           <Link href="/dashboard/diary/new">
             <button className="px-5 py-2 bg-green-800 text-white rounded-md hover:bg-gray-700 transition">
-             + New Entry
+              + New Entry
             </button>
           </Link>
         </div>
 
-        {/* Empty State */}
         {entries.length === 0 ? (
           <div className="text-center py-12 border rounded-lg bg-zinc-50">
             <p className="text-zinc-600">
@@ -51,21 +74,19 @@ export default function Diary() {
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold mb-4">Your Entries</h2>
+            <h2 className="text-xl text-black font-semibold mb-4">Your Entries</h2>
 
             <ul className="space-y-3">
               {entries.map((entry, index) => (
                 <li
-                  key={index}
+                  key={entry.id}
                   className="flex justify-between items-center p-4 bg-zinc-100 rounded-md shadow-sm hover:bg-zinc-200 transition"
                 >
-                  {/* Left: Date */}
                   <span className="text-black font-medium">
-                    {entry.date}
+                    {formatDate(entry.date).toLowerCase()}
                   </span>
 
-                  {/* Right: View Button */}
-                  <Link href={`/dashboard/diary/${entry.id || index}`}>
+                  <Link href={`/dashboard/diary/${entry.id}`}>
                     <button className="flex items-center gap-2 text-blue-600 hover:scale-105 transition">
                       <Eye size={18} />
                       View
@@ -76,7 +97,6 @@ export default function Diary() {
             </ul>
           </div>
         )}
-
       </main>
     </div>
   );

@@ -1,6 +1,8 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type User = {
   name: string;
@@ -12,31 +14,69 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
   const [user, setUser] = useState<User>({
     name: "Loading...",
     profileImage: "/images/User.png",
   });
 
+  const [loading, setLoading] = useState(true);
+ 
   useEffect(() => {
-    const fetchUser = async () => {
+    const loadUser = async () => {
       try {
-        const res = await fetch("/api/user");
+        const res = await fetch("http://localhost:5000/profile/data", {
+          credentials: "include", 
+        });
+
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+
         const data = await res.json();
 
         setUser({
-          name: data.name,
-          profileImage: data.profileImage || "/images/User.png",
+          name: data.username,
+          profileImage: data.image || "/images/User.png",
         });
+
       } catch (err) {
-        console.error("Error fetching user:", err);
+        console.error("Auth error:", err);
+        router.push("/login");
+      } finally {
+        setLoading(false); 
       }
     };
 
-    fetchUser();
-  }, []);
+    loadUser();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:5000/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      router.push("/"); 
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-xl">
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-zinc-100">
+
       <aside className="w-72 bg-gray-500 p-6 shadow-md">
         <div className="py-4 text-center">
           <img
@@ -48,6 +88,7 @@ export default function DashboardLayout({
             {user.name}
           </h2>
         </div>
+
         <ul className="space-y-2 mt-8">
           <li>
             <Link
@@ -57,6 +98,7 @@ export default function DashboardLayout({
               Dashboard
             </Link>
           </li>
+
           <li>
             <Link
               href="/dashboard/profile"
@@ -65,6 +107,7 @@ export default function DashboardLayout({
               Profile
             </Link>
           </li>
+
           <li>
             <Link
               href="/dashboard/settings"
@@ -73,13 +116,14 @@ export default function DashboardLayout({
               Settings
             </Link>
           </li>
+
           <li>
-            <Link
-              href="/logout"
-              className="block px-4 py-2 rounded-md hover:bg-gray-400 hover:text-white transition"
+            <button
+              onClick={handleLogout}
+              className="block w-full text-left px-4 py-2 rounded-md hover:bg-gray-400 hover:text-white transition"
             >
               Logout
-            </Link>
+            </button>
           </li>
         </ul>
       </aside>

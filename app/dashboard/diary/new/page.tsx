@@ -1,11 +1,30 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DiarySection() {
   const [date, setDate] = useState("");
   const [text, setText] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
+  const router = useRouter();
+
+  const [errors, setErrors] = useState<any>({});
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setDate(today);
+  }, []);
+
+  const validate = () => {
+    let err: any = {};
+
+    if (!date) err.date = "Date is required";
+    if (!text) err.text = "Text is required";
+
+    return err;
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -42,39 +61,80 @@ export default function DiarySection() {
     setDragging(false);
   };
 
-  const handleSave = () => {
-    if (!date || !text) return;
+  const handleSave = async () => {
+    setSuccess("");
 
-    const newEntry = {
-      date,
-      text,
-      images,
-    };
+    const validationErrors = validate();
 
-    console.log(newEntry);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
 
-    setDate("");
-    setText("");
-    setImages([]);
+    setErrors({});
+
+    try {
+      const formData = new FormData();
+
+      formData.append("date", date);
+      formData.append("description", text);
+
+      images.forEach((img) => {
+        formData.append("images", img);
+      });
+
+      const res = await fetch("http://localhost:5000/newdiary", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        setSuccess("Diary saved successfully !");
+
+        setTimeout(() => {
+          router.push("/dashboard/diary");
+        }, 1000);
+      } else {
+        alert("Failed to save diary");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Server error");
+    }
   };
 
   return (
     <div className="mt-10 p-6 bg-zinc-100 rounded-lg shadow max-w-3xl mx-auto">
+      
       <h2 className="text-2xl text-black font-semibold mb-6 text-center">
         <i>My Diary</i>
       </h2>
+
+      {success && (
+        <p className="text-green-600 text-center mb-3">{success}</p>
+      )}
+
       <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        className="w-full text-black p-2 mb-4 border rounded-md"
+        className="w-full text-black p-2 mb-2 border rounded-md"
       />
+      {errors.date && (
+        <p className="text-red-500 text-sm mb-3">{errors.date}</p>
+      )}
+
       <textarea
         placeholder="Write your thoughts here..."
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full text-black p-3 h-70 border rounded-md mb-4"
+        className="w-full text-black p-3 h-40 border rounded-md mb-2"
       />
+      {errors.text && (
+        <p className="text-red-500 text-sm mb-3">{errors.text}</p>
+      )}
+
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -88,6 +148,7 @@ export default function DiarySection() {
         <p className="text-gray-600">
           Drag & drop images (max 3) or click to upload
         </p>
+
         <input
           type="file"
           multiple
@@ -96,6 +157,7 @@ export default function DiarySection() {
           className="hidden"
           id="fileUpload"
         />
+
         <label
           htmlFor="fileUpload"
           className="block mt-2 text-blue-600 underline cursor-pointer"
@@ -103,9 +165,11 @@ export default function DiarySection() {
           Browse Files
         </label>
       </div>
+
       <p className="text-sm text-gray-500 mb-4">
         {images.length}/3 images selected
       </p>
+
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mb-6">
           {images.map((img, index) => (
@@ -115,6 +179,7 @@ export default function DiarySection() {
                 alt="preview"
                 className="h-24 w-full object-cover rounded-md"
               />
+
               <button
                 onClick={() =>
                   setImages(images.filter((_, i) => i !== index))
@@ -127,6 +192,7 @@ export default function DiarySection() {
           ))}
         </div>
       )}
+
       <div className="flex justify-between">
         <button
           onClick={handleSave}
@@ -142,7 +208,6 @@ export default function DiarySection() {
           Back
         </button>
       </div>
-
     </div>
   );
 }

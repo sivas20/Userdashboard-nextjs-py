@@ -1,11 +1,106 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function VerifyPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isNewUser, setIsNewUser] = useState(true);
+  const router = useRouter();
+
+  // ✅ CHECK PASSWORD EXISTS
+  useEffect(() => {
+    const checkPassword = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/checkmessagepassword", {
+          method: "GET", // ✅ FIXED
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.exists) {
+          setIsNewUser(false); // existing user → login
+        } else {
+          setIsNewUser(true); // new user → create password
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    checkPassword();
+  }, []);
+
+  // -------------------------
+  // CREATE PASSWORD
+  // -------------------------
+  const handleCreatePassword = async (e: any) => {
+    e.preventDefault();
+
+    const password = e.target.password.value;
+    const confirm = e.target.confirm.value;
+
+    if (password !== confirm) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/createmessagepassword", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Password created successfully");
+        setIsNewUser(false); // switch to login
+      } else {
+        alert(data.error || "Error creating password");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    }
+  };
+
+  // -------------------------
+  // VERIFY PASSWORD
+  // -------------------------
+  const handleLogin = async (e: any) => {
+    e.preventDefault();
+
+    const password = e.target.password.value;
+
+    try {
+      const res = await fetch("http://localhost:5000/verifymessagepassword", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push("/dashboard/secret");
+      } else {
+        alert(data.error || "Invalid password");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-zinc-100 py-20 px-4">
@@ -18,12 +113,15 @@ export default function VerifyPage() {
           <p className="text-center text-zinc-500 mb-8">
             Please create a password to secure Message storage.
           </p>
-          <form action="/RegisterMessagePassword" method="POST">
+
+          <form onSubmit={handleCreatePassword}>
             <div className="relative mb-6">
               <input
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password..."
                 className="w-full text-black p-3 pr-10 border rounded-md"
+                required
               />
               <button
                 type="button"
@@ -33,11 +131,14 @@ export default function VerifyPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+
             <div className="relative mb-6">
               <input
+                name="confirm"
                 type={showConfirm ? "text" : "password"}
                 placeholder="Confirm your password..."
                 className="w-full text-black p-3 pr-10 border rounded-md"
+                required
               />
               <button
                 type="button"
@@ -52,16 +153,6 @@ export default function VerifyPage() {
               Create Password
             </button>
           </form>
-
-          <p className="text-center mt-4 text-zinc-500">
-            Already have password?{" "}
-            <span
-              onClick={() => setIsNewUser(false)}
-              className="text-blue-600 cursor-pointer hover:underline"
-            >
-              Login here
-            </span>
-          </p>
         </div>
 
       ) : (
@@ -73,12 +164,14 @@ export default function VerifyPage() {
             Enter your password to access messages.
           </p>
 
-          <form action="/VerifyMessagePassword" method="POST">
+          <form onSubmit={handleLogin}>
             <div className="relative mb-4">
               <input
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password..."
-                className="w-100 mr-3 text-black p-3 border rounded-md"
+                className="w-full text-black p-3 border rounded-md"
+                required
               />
               <button
                 type="button"
@@ -88,14 +181,11 @@ export default function VerifyPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-              <div className="text-center mb-4">
-                <input type="checkbox"
-                       className="mr-2 hover:cursor-pointer hover:text-gray-700 transition"
-                />
-                <label className="text-zinc-500">
-                  Remember me
-                </label>
-              </div>
+
+            <div className="text-center mb-4">
+              <input type="checkbox" className="mr-2 cursor-pointer" />
+              <label className="text-zinc-500">Remember me</label>
+            </div>
 
             <button className="w-full bg-gray-700 text-white p-3 rounded-md">
               Login

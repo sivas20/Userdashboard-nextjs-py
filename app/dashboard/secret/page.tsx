@@ -13,7 +13,7 @@ export default function Secret() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/messages", {
+    fetch("http://localhost:5000/allsecrets", {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -80,7 +80,7 @@ export default function Secret() {
                   </h2>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 text-black">
                   <button onClick={() => handleView(msg)}>
                     <Eye size={18} />
                   </button>

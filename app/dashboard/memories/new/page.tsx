@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Memorysection() {
   const [place, setPlace] = useState("");
@@ -8,15 +9,49 @@ export default function Memorysection() {
   const [images, setImages] = useState<File[]>([]);
   const [dragging, setDragging] = useState(false);
 
+  const [errors, setErrors] = useState<any>({});
+  const [success, setSuccess] = useState("");
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setDate(today);
+  }, []);
+
+  const validate = () => {
+    let err: any = {};
+
+    if (!place) err.place = "Place is required";
+    if (!date) err.date = "Date is required";
+    if (!text) err.text = "Description is required";
+
+    return err;
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    const filesArray = Array.from(e.target.files);
-    setImages((prev) => [...prev, ...filesArray]);
+
+    const files = Array.from(e.target.files);
+
+    if (images.length + files.length > 3) {
+      alert("Maximum 3 images allowed");
+      return;
+    }
+
+    setImages((prev) => [...prev, ...files]);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+
     const files = Array.from(e.dataTransfer.files);
+
+    if (images.length + files.length > 3) {
+      alert("Maximum 3 images allowed");
+      return;
+    }
+
     setImages((prev) => [...prev, ...files]);
     setDragging(false);
   };
@@ -30,37 +65,47 @@ export default function Memorysection() {
     setDragging(false);
   };
 
-  // ✅ Save to backend
   const handleSave = async () => {
-    if (!place || !text) return;
+    setSuccess("");
 
-    const formData = new FormData();
-    formData.append("place", place);
-    formData.append("date", date);
-    formData.append("text", text);
+    const validationErrors = validate();
 
-    images.forEach((img) => {
-      formData.append("images", img);
-    });
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
 
     try {
-      const res = await fetch("http://localhost:5000/memories", {
+      const formData = new FormData();
+
+      formData.append("place", place);
+      formData.append("date", date);
+      formData.append("text", text);
+
+      images.forEach((img) => {
+        formData.append("images", img);
+      });
+
+      const res = await fetch("http://localhost:5000/newmemories", {
         method: "POST",
         body: formData,
         credentials: "include",
       });
 
-      const data = await res.json();
-      console.log("Saved:", data);
+      if (res.ok) {
+        setSuccess("Memory saved successfully ✅");
 
-      // reset
-      setPlace("");
-      setDate("");
-      setText("");
-      setImages([]);
-
+        setTimeout(() => {
+          router.push("/dashboard/memories");
+        }, 1000);
+      } else {
+        alert("Failed to save memory");
+      }
     } catch (err) {
       console.log(err);
+      alert("Server error");
     }
   };
 
@@ -72,39 +117,52 @@ export default function Memorysection() {
           <i>Place your memories</i>
         </h2>
 
+        {success && (
+          <p className="text-green-600 text-center mb-3">{success}</p>
+        )}
+
         <input
           placeholder="Enter place..."
           value={place}
           onChange={(e) => setPlace(e.target.value)}
-          className="w-full text-black p-3 mb-4 border rounded-md"
+          className="w-full text-black p-3 mb-2 border rounded-md"
         />
+        {errors.place && (
+          <p className="text-red-500 text-sm mb-3">{errors.place}</p>
+        )}
 
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="w-full text-black p-3 mb-4 border rounded-md"
+          className="w-full text-black p-3 mb-2 border rounded-md"
         />
+        {errors.date && (
+          <p className="text-red-500 text-sm mb-3">{errors.date}</p>
+        )}
 
         <textarea
           placeholder="Write about your memories here..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          className="w-full text-black p-3 h-32 border rounded-md mb-4"
+          className="w-full text-black p-3 h-32 border rounded-md mb-2"
         />
+        {errors.text && (
+          <p className="text-red-500 text-sm mb-3">{errors.text}</p>
+        )}
 
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          className={`w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition mb-6 ${
+          className={`w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition mb-4 ${
             dragging
               ? "bg-blue-100 border-blue-500"
               : "border-gray-400 hover:bg-gray-100"
           }`}
         >
           <p className="text-gray-600">
-            Drag & drop images here or click to upload
+            Drag & drop images (max 3) or click to upload
           </p>
 
           <input
@@ -123,6 +181,10 @@ export default function Memorysection() {
             Browse Files
           </label>
         </div>
+
+        <p className="text-sm text-gray-500 mb-4">
+          {images.length}/3 images selected
+        </p>
 
         {images.length > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-6">

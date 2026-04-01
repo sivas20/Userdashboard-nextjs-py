@@ -7,20 +7,50 @@ export default function PasswordChange() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState<any>({});
+  const [success, setSuccess] = useState("");
+  const validatepassword = (password: string) => {
+    const errors: string[] = [];
+    if (password.length < 6) errors.push("Password must be at least 6 characters");
+    if (!/[A-Z]/.test(password)) errors.push("Password must contain at least one uppercase letter");
+    if (!/[a-z]/.test(password)) errors.push("Password must contain at least one lowercase letter");
+    if (!/[0-9]/.test(password)) errors.push("Password must contain at least one number");
+    if (!/[!@#$%^&*]/.test(password)) errors.push("Password must contain at least one special character");
+    return errors;
+  };
+  const validate = () => {
+    let err: any = {};
+    if (!currentPassword) err.currentPassword = "Current password is required";
+    if (!newPassword) err.newPassword = "New password is required";
+    if (newPassword && newPassword.length < 6) err.newPassword = "New password must be at least 6 characters";
+    if (newPassword !== confirmPassword && confirmPassword !== newPassword) err.confirmPassword = "Passwords do not match";
+    return err;
+  };
 
-  const handleSubmit = async () => {
-    if (newPassword !== confirmPassword) {
-      alert("New password and confirm password do not match");
+  const handleSubmit = async (e: any) => {
+    setSuccess("");
+    const validationErrors = validate();
+    const passwordErrors = validatepassword(newPassword);
+    if (passwordErrors.length > 0) {
+      setErrors({
+        ...errors,
+        newPassword: passwordErrors.join(", "),
+      });
       return;
     }
 
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+      setErrors({});
+
     try {
-      const res = await fetch("http://localhost:5000/change-password", {
-        method: "POST",
+      const res = await fetch("http://localhost:5000/changepassword", {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
@@ -34,17 +64,19 @@ export default function PasswordChange() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Password updated successfully");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
+        setSuccess("Password updated successfully");
       } else {
-        alert(data.message || "Error updating password");
+        setErrors(
+         data.message || "Error updating password",
+        );
       }
 
     } catch (err) {
       console.log(err);
-      alert("Server error");
+      alert("Server error - try again later");
     }
   };
 
